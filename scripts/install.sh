@@ -7,7 +7,14 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="${XDG_CONFIG_HOME:-$HOME/.config}/ags"
 CHECK_ONLY=0
-[[ "${1:-}" == "--check" ]] && CHECK_ONLY=1
+AUTO_APPROVE=0
+for arg in "$@"; do
+  case "$arg" in
+    --check) CHECK_ONLY=1 ;;
+    --yes) AUTO_APPROVE=1 ;;
+    *) echo "Unknown option: $arg"; exit 2 ;;
+  esac
+done
 
 if [[ ! -f "$SCRIPT_DIR/app.ts" || ! -d "$SCRIPT_DIR/widgets" ]]; then
   echo "Run this script from a cloned matshell-niri repository."
@@ -94,12 +101,17 @@ if ((${#missing_packages[@]} || ${#missing_commands[@]} || ${#missing_gi[@]})); 
     exit 1
   fi
   echo
-  read -r -p "Install missing packages with yay? [y/N] " answer
-  case "$answer" in
-    [Yy]|[Yy][Ee][Ss]) ;;
-    *) echo "Cancelled. No files were changed."; exit 1 ;;
-  esac
-  yay -S --needed "${missing_packages[@]}"
+  if ((AUTO_APPROVE)); then
+    echo "--yes supplied: installing the listed dependencies without package-selection prompts."
+    yay -S --needed --noconfirm "${missing_packages[@]}"
+  else
+    read -r -p "Install missing packages with yay? [y/N] " answer
+    case "$answer" in
+      [Yy]|[Yy][Ee][Ss]) ;;
+      *) echo "Cancelled. No files were changed."; exit 1 ;;
+    esac
+    yay -S --needed "${missing_packages[@]}"
+  fi
 
   # Recheck after package installation.
   missing_commands=()

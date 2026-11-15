@@ -1,6 +1,6 @@
 #!/bin/bash
 
-repo="https://github.com/Neurarian/matshell/"
+repo="https://github.com/pxotitas/matshell-niri/"
 dest="$HOME/.config/ags/"
 
 command_exists() {
@@ -101,7 +101,9 @@ prompt_choice() {
 
 # Detect running compositor
 detect_compositor() {
-    if pgrep -x "Hyprland" > /dev/null; then
+    if [ -n "${NIRI_SOCKET:-}" ] || pgrep -x "niri" > /dev/null; then
+        echo "niri"
+    elif pgrep -x "Hyprland" > /dev/null; then
         echo "hyprland"
     elif pgrep -x "river" > /dev/null; then
         echo "river"
@@ -145,23 +147,25 @@ install_dependencies() {
     fi
     
     if [ -z "$compositor_choice" ]; then
-        prompt_choice "Which compositor do you want to use?" "Hyprland" "River"
+        prompt_choice "Which compositor do you want to use?" "Hyprland" "River" "Niri"
         local choice=$?
         if [ $choice -eq 0 ]; then
             compositor_choice="hyprland"
-        else
+        elif [ $choice -eq 1 ]; then
             compositor_choice="river"
+        else
+            compositor_choice="niri"
         fi
     fi
     
     echo "Selected compositor: $compositor_choice"
     
     # Set compositor library based on choice
-    if [ "$compositor_choice" = "hyprland" ]; then
-        compositor_lib="libastal-hyprland-git"
-    else
-        compositor_lib="libastal-river-git"
-    fi
+    case "$compositor_choice" in
+        hyprland) compositor_lib="libastal-hyprland-git" ;;
+        river) compositor_lib="libastal-river-git" ;;
+        niri) compositor_lib="" ;; # Niri integration uses the native IPC event stream.
+    esac
 
     echo ""
     echo "════════════════════════════════════════"
@@ -174,13 +178,19 @@ install_dependencies() {
     echo ""
     
     local wallpaper_choice
-    prompt_choice "Which wallpaper daemon?" "awww" "hyprpaper" "Both (install both)"
-    local wp_choice=$?
-    
-    case $wp_choice in
-        0) wallpaper_choice="awww" ;;
-        1) wallpaper_choice="hyprpaper" ;;
-    esac
+    if [ "$compositor_choice" = "niri" ]; then
+        echo "Niri uses the compositor-independent awww backend."
+        wallpaper_choice="awww"
+    else
+        prompt_choice "Which wallpaper daemon?" "awww" "hyprpaper" "Both (install both)"
+        local wp_choice=$?
+
+        case $wp_choice in
+            0) wallpaper_choice="awww" ;;
+            1) wallpaper_choice="hyprpaper" ;;
+            2) wallpaper_choice="both" ;;
+        esac
+    fi
     
     echo "Selected wallpaper daemon: $wallpaper_choice"
 
@@ -218,17 +228,24 @@ install_dependencies() {
         ["ttf-fira-code-nerd"]="ttf-firacode-nerd"
     )
 
-    # Install compositor-specific library
-    CORE_DEPS["astal-compositor"]="$compositor_lib"
-    
-    # Install compositor if not already installed
-    CORE_DEPS["compositor"]="$compositor_choice"
+    # Install compositor-specific Astal library only when one is required.
+    if [ -n "$compositor_lib" ]; then
+        CORE_DEPS["astal-compositor"]="$compositor_lib"
+    fi
+
+    # Niri is already running when selected; its IPC integration needs no extra package.
+    if [ "$compositor_choice" != "niri" ]; then
+        CORE_DEPS["compositor"]="$compositor_choice"
+    fi
     
     # Install wallpaper daemon(s)
     if [ "$wallpaper_choice" = "awww" ]; then
         CORE_DEPS["wallpaper"]="awww"
     elif [ "$wallpaper_choice" = "hyprpaper" ]; then
         CORE_DEPS["wallpaper"]="hyprpaper"
+    elif [ "$wallpaper_choice" = "both" ]; then
+        CORE_DEPS["wallpaper-awww"]="awww"
+        CORE_DEPS["wallpaper-hyprpaper"]="hyprpaper"
     fi
 
     echo "Installing core dependencies..."
@@ -278,7 +295,7 @@ install_dependencies() {
     echo "  Installation Summary"
     echo "════════════════════════════════════════"
     echo "Compositor: $compositor_choice"
-    echo "Compositor Library: $compositor_lib"
+    echo "Compositor Library: ${compositor_lib:-not required (Niri IPC)}"
     echo "Wallpaper Daemon: $wallpaper_choice"
     echo "════════════════════════════════════════"
     echo ""
@@ -324,6 +341,9 @@ output_path = "~/.config/gtk-4.0/gtk.css"
 input_path = "~/.config/ags/matugen/templates/ags.scss"
 output_path = "~/.config/ags/style/abstracts/_variables.scss"
 
+EOF
+  if [ "$compositor_choice" != "niri" ]; then
+    cat >> "$matugen_config_file" << 'EOF'
 [templates.hypr]
 input_path = "~/.config/ags/matugen/templates/hyprland_colors.lua"
 output_path = "~/.config/hypr/hyprland_colors.lua"
@@ -332,6 +352,7 @@ output_path = "~/.config/hypr/hyprland_colors.lua"
 input_path = "~/.config/ags/matugen/templates/hyprlock_colors.conf"
 output_path = "~/.config/hypr/hyprlock_colors.conf"
 EOF
+  fi
 fi
 
 echo ""
@@ -345,6 +366,6 @@ echo "  2. Configure your compositor settings"
 echo "  3. Set a wallpaper with your chosen daemon"
 echo ""
 echo "For more information, visit:"
-echo "  https://github.com/Neurarian/matshell"
+echo "  https://github.com/pxotitas/matshell-niri"
 echo "════════════════════════════════════════"
 

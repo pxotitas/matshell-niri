@@ -4,7 +4,7 @@ import { Astal, Gdk, Gtk } from "ags/gtk4";
 import { compositor } from "utils/compositor/detector";
 import { SysTray, hasTrayItems } from "./modules/SysTray.tsx";
 import Separator from "./modules/Separator.tsx";
-import { HyprlandWorkspaces, RiverWorkspaces } from "./modules/Workspaces.tsx";
+import { HyprlandWorkspaces, RiverWorkspaces, NiriWorkspaces } from "./modules/Workspaces.tsx";
 import { Clients } from "./modules/Clients.tsx";
 import Mem from "./modules/Mem.tsx";
 import Cpu from "./modules/Cpu.tsx";
@@ -103,7 +103,15 @@ function Bar({ gdkmonitor, ...props }: any) {
             <box visible={options["bar.modules.os-icon.enable"]}>
               <OsIcon />
             </box>
-            {compositor.name === "river" ? (
+            {compositor.name === "niri" ? (
+              <>
+                <NiriWorkspaces gdkmonitor={gdkmonitor} />
+                <box visible={showClients}>
+                  <Separator />
+                  <Clients gdkmonitor={gdkmonitor} />
+                </box>
+              </>
+            ) : compositor.name === "river" ? (
               <RiverWorkspaces gdkmonitor={gdkmonitor} />
             ) : (
               <>

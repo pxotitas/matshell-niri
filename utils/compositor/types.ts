@@ -14,6 +14,7 @@ export interface Monitor {
 export interface Workspace {
   id: number | string;
   name: string;
+  index?: number;
   focused: boolean;
   occupied: boolean;
   monitor: string;

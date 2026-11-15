@@ -3,6 +3,7 @@ import app from "ags/gtk4/app";
 import { Astal, Gdk, Gtk } from "ags/gtk4";
 import { createState } from "ags";
 import { gdkmonitor, currentMonitorWidth } from "utils/monitors.ts";
+import { compositor } from "utils/compositor/detector";
 
 function hide() {
   app.get_window("logout-menu")!.hide();
@@ -50,11 +51,13 @@ export default function LogoutMenu() {
             orientation={Gtk.Orientation.VERTICAL}
           >
             <box>
-              {LogoutButton("lock", "hyprlock")}
+              {LogoutButton("lock", "loginctl lock-session")}
               {LogoutButton("bedtime", "systemctl suspend || loginctl suspend")}
               {LogoutButton(
                 "logout",
-                "pkill Hyprland || loginctl terminate-user $USER",
+                compositor.name === "niri"
+                  ? "niri msg action quit --skip-confirmation"
+                  : "pkill Hyprland || loginctl terminate-user $USER",
               )}
             </box>
             <box>

@@ -15,7 +15,7 @@ in {
       enable = lib.mkEnableOption "matshell desktop shell";
 
       compositor = lib.mkOption {
-        type = lib.types.enum ["hyprland" "river"];
+        type = lib.types.enum ["hyprland" "river" "niri"];
         default = "hyprland";
         description = "Which Wayland compositor to build matshell for.";
       };
@@ -25,6 +25,8 @@ in {
         default =
           if cfg.compositor == "river"
           then self.packages.${pkgs.stdenv.hostPlatform.system}.matshell-river
+          else if cfg.compositor == "niri"
+          then self.packages.${pkgs.stdenv.hostPlatform.system}.matshell-niri
           else self.packages.${pkgs.stdenv.hostPlatform.system}.matshell-hyprland;
         description = "The bundled matshell package to install.";
       };
@@ -83,6 +85,7 @@ in {
         input_path = "${agsTemplate}"
         output_path = "~/.config/ags/style/abstracts/_variables.scss"
 
+        ${lib.optionalString (cfg.compositor != "niri") ''
         [templates.hypr]
         input_path = "${hyprTemplate}"
         output_path = "~/.config/hypr/hyprland_colors.lua"
@@ -90,7 +93,7 @@ in {
         [templates.hyprlock]
         input_path = "${hyprlockTemplate}"
         output_path = "~/.config/hypr/hyprlock_colors.conf"
-
+        ''}
         [config.custom_colors]
       '';
   };

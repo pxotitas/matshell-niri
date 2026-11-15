@@ -72,7 +72,9 @@
         then [astalPkgs.river]
         else if compositor == "hyprland"
         then [astalPkgs.hyprland]
-        else throw "Unsupported compositor: ${compositor}. Use 'river' or 'hyprland'.";
+        else if compositor == "niri"
+        then [] # Niri is accessed through its native IPC socket; no Astal binding needed.
+        else throw "Unsupported compositor: ${compositor}. Use 'niri', 'river' or 'hyprland'.";
     in
       (with pkgs; [
         glib
@@ -228,6 +230,7 @@
 
         packages.matshell-hyprland = mkMatshellPackage system "hyprland";
         packages.matshell-river = mkMatshellPackage system "river";
+        packages.matshell-niri = mkMatshellPackage system "niri";
 
         apps = {
           default = {
@@ -244,12 +247,18 @@
             type = "app";
             program = "${self.packages.${system}.matshell-river}/bin/matshell";
           };
+
+          matshell-niri = {
+            type = "app";
+            program = "${self.packages.${system}.matshell-niri}/bin/matshell";
+          };
         };
 
         devShells = {
           default = mkDevShell "hyprland";
           hyprland = mkDevShell "hyprland";
           river = mkDevShell "river";
+          niri = mkDevShell "niri";
         };
       };
 

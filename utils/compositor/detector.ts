@@ -3,6 +3,10 @@ import { CompositorAdapter } from "./types";
 async function detectCompositor(): Promise<CompositorAdapter> {
   const adapterFactories = [
     async () => {
+      const { NiriAdapter } = await import("./niri");
+      return new NiriAdapter();
+    },
+    async () => {
       try {
         const { RiverAdapter } = await import("./river");
         return new RiverAdapter();
@@ -34,7 +38,7 @@ async function detectCompositor(): Promise<CompositorAdapter> {
   }
 
   throw new Error(
-    "No supported compositor detected. Make sure you're running Hyprland or River.",
+    "No supported compositor detected. Make sure you're running Niri, Hyprland or River.",
   );
 }
 

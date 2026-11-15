@@ -19,7 +19,7 @@ ______________________________________________________________________
 
 </div>
 
-Matshell is a GPU-accelerated Material Design inspired desktop shell built with [AGS/Astal](https://github.com/Aylur/astal) for [Hyprland](https://github.com/hyprwm/Hyprland) and [River](https://codeberg.org/river/river). This project draws heavy inspiration from [fufexan's](https://github.com/fufexan/dotfiles) AGSv1 config, with design influences from [saimoomedits](https://github.com/saimoomedits/eww-widgets), tailored for both multi-monitor desktop setups and laptops.
+Matshell is a GPU-accelerated Material Design inspired desktop shell built with [AGS/Astal](https://github.com/Aylur/astal) for [Hyprland](https://github.com/hyprwm/Hyprland) and [River](https://codeberg.org/river/river). The **Niri port** is maintained separately at [pxotitas/matshell-niri](https://github.com/pxotitas/matshell-niri). This project draws heavy inspiration from [fufexan's](https://github.com/fufexan/dotfiles) AGSv1 config, with design influences from [saimoomedits](https://github.com/saimoomedits/eww-widgets), tailored for both multi-monitor desktop setups and laptops.
 
 This setup tries to achieve sleek, "MacOS-esque" looks with a little bit of rice sprinkled on top.
 
@@ -31,6 +31,20 @@ This setup tries to achieve sleek, "MacOS-esque" looks with a little bit of rice
 - **Dynamic Material Design Theming**: Change themes on-the-fly via [matugen](https://github.com/InioX/matugen) templates
 - **Multi-monitor Support**: Designed with multi-monitor setups in mind
 - **Hyprland & River Support**: Automatic compositor detection
+- **Niri port (in progress)**: Native Niri IPC event-stream integration; real per-output workspaces, without persistent placeholder slots
+
+### Niri port status
+
+The `niri-port` branch currently includes:
+
+- A compositor adapter backed by Niri's JSON IPC event stream (no polling loop).
+- Live workspace and window state, including focus, urgency, output assignment, and occupancy.
+- Per-output workspace buttons generated only from workspaces Niri actually reports; no fixed 9/10-workspace strip.
+- Workspace activation by focusing the owning output and then the workspace index/name.
+- Window focus through Niri window IDs.
+- Niri-specific package and Home Manager targets (`matshell-niri`, `compositor = "niri"`).
+
+The rest of the shell still needs a full compatibility pass and real-session testing. Contributions and bug reports are welcome, but this branch should be considered experimental for now.
 - **Cava Visualizer Library**: Ships with an extensive lib of optional Cava visualizers to enjoy your music to
 - **Multimodal Fuzzy & Frecency Picker**: Apps, clipboard, wallpapers - all ranked by frequency + recency, loosely based on [gnofi](https://github.com/Aylur/gnofi).
 - **Nix Support**: Support for NixOS / Home-Manager with dedicated module

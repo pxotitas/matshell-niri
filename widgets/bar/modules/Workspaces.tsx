@@ -133,3 +133,25 @@ export function HyprlandWorkspaces() {
 
   return <WorkspacesContainer buttons={workspaceButtons} />;
 }
+
+
+// Niri creates and removes workspaces dynamically. Render only the real
+// workspaces reported by its IPC event stream; never synthesize empty slots.
+export function NiriWorkspaces({ gdkmonitor }: RiverWorkspacesProps = {}) {
+  const monitorName = gdkmonitor?.get_connector() || null;
+  const workspaceButtons = createComputed(
+    [compositor.workspaces, monitorIndexMap],
+    (wss, monMap) => {
+      return wss
+        .filter((workspace) => !monitorName || workspace.monitor === monitorName)
+        .sort((a, b) => (a.index ?? Number(a.name)) - (b.index ?? Number(b.name)))
+        .map((workspace) => ({
+          id: Number(workspace.id),
+          workspace,
+          visible: true,
+          monitorIndex: monMap.get(workspace.monitor),
+        }));
+    },
+  );
+  return <WorkspacesContainer buttons={workspaceButtons} />;
+}
